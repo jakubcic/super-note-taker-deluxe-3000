@@ -5,6 +5,7 @@ const {
   readAndAppend,
   writeToFile,
 } = require("../helpers/fsUtils");
+const stringTemplateParser = require("../helpers/parser");
 
 // GET route to get all notes
 api.get("/notes", (req, res) => {
@@ -52,15 +53,32 @@ api.delete("/notes/:id", (req, res) => {
         // write filtered notes to db.json
         writeToFile("./db/db.json", notesToKeep);
         // construct response
+        // use our helper function so we can write a nice status message in the response :)
+        const statusMessage = stringTemplateParser(
+          "Successfully deleted note with id {{id}}",
+          noteToDelete[0]
+        );
         const response = {
-          status: "Successfully deleted note",
-          deleted: noteToDelete,
+          status: "Success",
+          message: statusMessage,
+          body : {
+            deleted: noteToDelete
+          }
         };
         res.json(response);
       } else {
         // construct response
+        const idQuery = {
+          id: noteId,
+        }
+        // use stringTemplateParser helper
+        const statusMessage = stringTemplateParser(
+          "Unable to find note with id {{id}}",
+          idQuery
+        );
         const response = {
-          status: "No note with that ID",
+          status: "Error",
+          message: statusMessage,
         };
         res.json(response);
       }
@@ -79,8 +97,18 @@ api.get("/notes/:id", (req, res) => {
 
       // construct response if note not found
       if (!specificNote) {
+        
+        const idQuery = {
+          id: noteId,
+        }
+        // use stringTemplateParser helper
+        const statusMessage = stringTemplateParser(
+          "Unable to find note with id {{id}}",
+          idQuery
+        );
         const response = {
-          status: "No note found with that id",
+          status: "Error",
+          message: statusMessage,
         };
         res.json(response);
       } else {
